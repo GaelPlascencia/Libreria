@@ -1,0 +1,100 @@
+﻿@page "/libros/nuevo"
+@page "/libros/nuevo/{Id:int}"
+@inject IRepositorioLibros _repositorio;
+@inject NavigationManager _navigator;
+
+<h3>Agregar Libro@(_mensaje)</h3>
+
+<EditForm Model="_libro" FormName="frmLibro" OnValidSubmit="Guardar">
+    <DataAnnotationsValidator />
+
+    <div class="row mb-3">
+        <label for="txtTitulo" class="col-2 col-form-label">Título</label>
+        <div class="col-10">
+            <InputText id="txtTitulo" class="form-control" @bind-Value="_libro!.Titulo" />
+            <ValidationMessage For="@(() => _libro.Titulo)" />
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <label for="txtAutor" class="col-2 col-form-label">Autor</label>
+        <div class="col-10">
+            <InputText id="txtAutor" class="form-control" @bind-Value="_libro.Autor" />
+            <ValidationMessage For="@(() => _libro.Autor)" />
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <label for="txtCategoria" class="col-2 col-form-label">Categoría</label>
+        <div class="col-10">
+            <InputText id="txtCategoria" class="form-control" @bind-Value="_libro.Categoria" />
+            <ValidationMessage For="@(() => _libro.Categoria)" />
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <label for="numPrecio" class="col-2 col-form-label">Precio</label>
+        <div class="col-10">
+            <InputNumber id="numPrecio" class="form-control" @bind-Value="_libro.Precio" />
+            <ValidationMessage For="@(() => _libro.Precio)" />
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <label for="numStock" class="col-2 col-form-label">Stock</label>
+        <div class="col-10">
+            <InputNumber id="numStock" class="form-control" @bind-Value="_libro.Stock" />
+            <ValidationMessage For="@(() => _libro.Stock)" />
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <label for="numNivelMinimo" class="col-2 col-form-label">Nivel Mínimo</label>
+        <div class="col-10">
+            <InputNumber id="numNivelMinimo" class="form-control" @bind-Value="_libro.Nivel_minimo" />
+            <ValidationMessage For="@(() => _libro.Nivel_minimo)" />
+        </div>
+    </div>
+
+    <button class="btn btn-primary" type="submit">Guardar</button>
+    <button class="btn btn-danger" @onclick="Cancelar">Cancelar</button>
+</EditForm>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+    private string _mensaje = "";
+
+    private Libro? _libro = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Id > 0)
+        {
+            _libro = await _repositorio.Get(Id);
+            _mensaje = " : Modificar";
+        }
+        else
+        {
+            _mensaje = " : Nuevo";
+        }
+    }
+
+    private async void Guardar()
+    {
+        if (Id > 0)
+        {
+            await _repositorio.Update(Id, _libro!);
+        }
+        else
+        {
+            await _repositorio.Add(_libro!);
+        }
+        Cancelar();
+    }
+
+    private void Cancelar()
+    {
+        _navigator.NavigateTo("/libros");
+    }
+}

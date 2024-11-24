@@ -1,0 +1,85 @@
+﻿@page "/clientes/nuevo"
+@page "/clientes/nuevo/{Id:int}"
+@inject IRepositorioCliente _repositorio
+@inject NavigationManager _navigator
+
+<h3>Registrar Cliente@(_mensaje)</h3>
+
+<EditForm Model="_cliente" OnValidSubmit="Guardar">
+    <DataAnnotationsValidator />
+
+    <div class="row mb-3">
+        <label for="nombre" class="col-2 col-form-label">Nombre</label>
+        <div class="col-10">
+            <InputText id="nombre" class="form-control" @bind-Value="_cliente!.Nombre" />
+            <ValidationMessage For="@(() => _cliente!.Nombre)" />
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <label for="correo" class="col-2 col-form-label">Correo</label>
+        <div class="col-10">
+            <InputText id="correo" class="form-control" @bind-Value="_cliente!.Correo" />
+            <ValidationMessage For="@(() => _cliente!.Correo)" />
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <label for="telefono" class="col-2 col-form-label">Teléfono</label>
+        <div class="col-10">
+            <InputText id="telefono" class="form-control" @bind-Value="_cliente!.Telefono" />
+            <ValidationMessage For="@(() => _cliente!.Telefono)" />
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <label for="direccion" class="col-2 col-form-label">Dirección</label>
+        <div class="col-10">
+            <InputText id="direccion" class="form-control" @bind-Value="_cliente!.Direccion" />
+            <ValidationMessage For="@(() => _cliente!.Direccion)" />
+        </div>
+    </div>
+
+    <button class="btn btn-primary" type="submit">Guardar</button>
+    <button class="btn btn-danger ms-2" type="button" @onclick="Cancelar">Cancelar</button>
+</EditForm>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private string _mensaje = "";
+    private Cliente? _cliente = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Id > 0)
+        {
+            _cliente = await _repositorio.Get(Id);
+            _mensaje = " : Modificar";
+        }
+        else
+        {
+            _cliente = new Cliente();
+            _mensaje = " : Nuevo";
+        }
+    }
+
+    private async Task Guardar()
+    {
+        if (Id > 0)
+        {
+            await _repositorio.Update(Id, _cliente!);
+        }
+        else
+        {
+            await _repositorio.Add(_cliente!);
+        }
+        Cancelar();
+    }
+
+    private void Cancelar()
+    {
+        _navigator.NavigateTo("/clientes");
+    }
+}

@@ -1,0 +1,92 @@
+﻿@page "/pedidos/nuevo"
+@page "/pedidos/nuevo/{Id:int}"
+@inject IRepositorioCliente _repositorioClientes
+@inject IRepositorioLibros _repositorioLibros
+@inject IRepositorioPedidoCliente _repositorioPedidos
+@inject NavigationManager _navigator
+
+<h3>@(Id > 0 ? "Editar Pedido" : "Nuevo Pedido")</h3>
+
+<EditForm Model="_pedido" OnValidSubmit="Guardar">
+    <DataAnnotationsValidator />
+    <div class="mb-3">
+        <label for="cliente" class="form-label">Cliente</label>
+        <InputSelect id="cliente" class="form-control" @bind-Value="_pedido.ClienteId">
+            <option value="">Seleccione un cliente</option>
+            @foreach (var cliente in _clientes)
+            {
+                <option value="@cliente.Id">@cliente.Nombre</option>
+            }
+        </InputSelect>
+        <ValidationMessage For="@(() => _pedido.ClienteId)" />
+    </div>
+    <div class="mb-3">
+        <label for="libro" class="form-label">Libro</label>
+        <InputSelect id="libro" class="form-control" @bind-Value="_pedido.LibroId">
+            <option value="">Seleccione un libro</option>
+            @foreach (var libro in _libros)
+            {
+                <option value="@libro.Id">@libro.Titulo</option>
+            }
+        </InputSelect>
+        <ValidationMessage For="@(() => _pedido.LibroId)" />
+    </div>
+    <div class="mb-3">
+        <label for="cantidad" class="form-label">Cantidad</label>
+        <InputNumber id="cantidad" class="form-control" @bind-Value="_pedido.Cantidad" />
+        <ValidationMessage For="@(() => _pedido.Cantidad)" />
+    </div>
+    <div class="mb-3">
+        <label for="estado" class="form-label">Estado</label>
+        <InputSelect id="libro" class="form-control" @bind-Value="_pedido.Estado">
+            <option value="">Seleccione estado</option>
+            <option value="Pendiente">Pendiente</option>
+            <option value="Entregado">Entregado</option>
+        </InputSelect>
+        <ValidationMessage For="@(() => _pedido.Estado)" />
+    </div>
+    <button type="submit" class="btn btn-primary">Guardar</button>
+    <button type="button" class="btn btn-danger" @onclick="Cancelar">Cancelar</button>
+</EditForm>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private PedidoCliente _pedido = new();
+    private List<Cliente> _clientes = new();
+    private List<Libro> _libros = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _clientes = await _repositorioClientes.GetAll();
+        _libros = await _repositorioLibros.GetAll();
+
+        if (Id > 0)
+        {
+            var pedidoExistente = await _repositorioPedidos.Get(Id);
+            if (pedidoExistente is not null)
+            {
+                _pedido = pedidoExistente;
+            }
+        }
+    }
+
+    private async Task Guardar()
+    {
+        if (Id > 0)
+        {
+            await _repositorioPedidos.Update(Id, _pedido);
+        }
+        else
+        {
+            await _repositorioPedidos.Add(_pedido);
+        }
+        _navigator.NavigateTo("/pedidos");
+    }
+
+    private void Cancelar()
+    {
+        _navigator.NavigateTo("/pedidos");
+    }
+}

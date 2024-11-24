@@ -1,0 +1,85 @@
+﻿@page "/libros"
+@inject IRepositorioLibros _repositorio
+@inject NavigationManager _navigator
+<PageTitle>Libros</PageTitle>
+
+<div class="row">
+    <div class="col">
+        <h3>Lista de Libros</h3>
+    </div>
+    <div class="col">
+        <a href="libros/nuevo" class="btn btn-primary">Agregar Libros</a>
+    </div>
+</div>
+
+@if (_libros is null)
+{
+    <div class="spinner-border" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+}
+else if (_libros.Count == 0)
+{
+    <h2>No existen libros registrados</h2>
+}
+else
+{
+    @if (_libros.Any(l => l.Stock <= l.Nivel_minimo))
+    {
+        <div class="alert alert-warning mt-3 mb-2">
+            @foreach (var libro in _libros.Where(l => l.Stock <= l.Nivel_minimo))
+            {
+                <div>@((MarkupString)$"El libro <strong>{libro.Titulo}</strong> cuenta con un stock bajo.")</div>
+            }
+        </div>
+    }
+
+    <table class="table table-striped text-center">
+        <thead>
+            <tr>
+                <th>Titulo</th>
+                <th>Autor</th>
+                <th>Categoria</th>
+                <th>Precio</th>
+                <th>Stock</th>
+                <th>Nivel mínimo</th>
+                <th colspan="2">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (Libro libro in _libros)
+            {
+                <tr>
+                    <td>@libro.Titulo</td>
+                    <td>@libro.Autor</td>
+                    <td>@libro.Categoria</td>
+                    <td>@libro.Precio?.ToString("F2")</td>
+                    <td>@libro.Stock</td>
+                    <td>@libro.Nivel_minimo</td>
+                    <td>
+                        <i @onclick="()=>Modificar(libro.Id)" class="bi bi-pencil-fill"></i>
+                        <i @onclick="()=>Eliminar(libro)" class="bi bi-trash-fill"></i>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+@code {
+    private List<Libro>? _libros;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _libros = await _repositorio.GetAll();
+    }
+    private void Modificar(int id)
+    {
+        _navigator.NavigateTo($"/libros/nuevo/{id}");
+    }
+    private async void Eliminar(Libro libro)
+    {
+        await _repositorio.Delete(libro.Id);
+        _libros!.Remove(libro);
+        StateHasChanged();
+    }
+}

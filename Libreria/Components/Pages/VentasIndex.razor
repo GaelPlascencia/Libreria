@@ -1,0 +1,73 @@
+﻿@page "/ventas"
+@inject IRepositorioVenta _repositorio
+@inject NavigationManager _navigator
+<PageTitle>Ventas</PageTitle>
+
+<div class="row">
+    <div class="col">
+        <h3>Listado de Ventas</h3>
+    </div>
+    <div class="col">
+        <a href="ventas/nueva" class="btn btn-primary">Registrar ventas</a>
+    </div>
+</div>
+@if(_ventas is null)
+{
+    <div class="spinner-border" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+}
+else if (_ventas.Count == 0)
+{
+    <h2>No se han realizado ventas</h2>
+}
+else
+{
+    <table class="table table-striped text-center">
+        <thead>
+            <tr>
+                <th>Libro</th>
+                <th>Cantidad</th>
+                <th>Fecha y hora</th>
+                <th>Total</th>
+                <th colspan="2">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (Venta venta in _ventas)
+            {
+                <tr>
+                    <td>@venta.Libro!.Titulo</td>
+                    <td>@venta.Cantidad</td>
+                    <td>@venta.Fecha_Venta</td>
+                    <td>@venta.Total?.ToString("F2")</td>
+                    <td>
+                        <i class="bi bi-pencil-fill" @onclick="()=>Modificar(venta.Id)"></i>
+                        <i class="bi bi-trash-fill" @onclick="()=>Eliminar(venta)"></i>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+
+
+@code {
+    private List<Venta>? _ventas = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _ventas = await _repositorio.GetAll();
+    }
+    private void Modificar(int id)
+    {
+        _navigator.NavigateTo($"/ventas/nueva/{id}");
+    }
+    private async void Eliminar(Venta venta)
+    {
+        await _repositorio.Delete(venta.Id);
+        _ventas!.Remove(venta);
+        StateHasChanged();
+    }
+}

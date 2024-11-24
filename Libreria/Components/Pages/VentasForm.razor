@@ -1,0 +1,115 @@
+﻿@page "/ventas/nueva"
+@page "/ventas/nueva/{Id:int}"
+@inject IRepositorioVenta _repositorioVenta
+@inject IRepositorioLibros _repositorioLibros
+@inject NavigationManager _navigator
+
+<h3>Registrar Venta@(_mensaje)</h3>
+
+<EditForm Model="_venta" FormName="frmVenta" OnValidSubmit="Guardar">
+    <DataAnnotationsValidator />
+
+    <div class="row mb-3">
+        <label for="selectLibro" class="col-2 col-form-label">Libro</label>
+        <div class="col-10">
+            <InputSelect id="selectLibro" class="form-control" @bind-Value="_venta!.LibroId">
+                <option value="">Seleccione un libro</option>
+                @foreach (var libro in _libros!)
+                {
+                    <option value="@libro.Id">@libro.Titulo</option>
+                }
+            </InputSelect>
+            <ValidationMessage For="@(() => _venta.LibroId)" />
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <label for="numCantidad" class="col-2 col-form-label">Cantidad</label>
+        <div class="col-10">
+            <InputNumber id="numCantidad" class="form-control" @bind-Value="_venta.Cantidad" />
+            <ValidationMessage For="@(() => _venta.Cantidad)" />
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <label for="dateVenta" class="col-2 col-form-label">Fecha de Venta</label>
+        <div class="col-10">
+            <InputDate id="dateVenta" class="form-control" @bind-Value="_venta.Fecha_Venta" />
+            <ValidationMessage For="@(() => _venta.Fecha_Venta)" />
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <label for="numTotal" class="col-2 col-form-label">Total</label>
+        <div class="col-10">
+            <InputNumber id="numTotal" class="form-control" @bind-Value="_venta.Total" disabled />
+            <ValidationMessage For="@(() => _venta.Total)" />
+        </div>
+    </div>
+    <button class="btn btn-primary" type="submit">Guardar</button>
+    <button class="btn btn-danger" type="button" @onclick="Cancelar">Cancelar</button>
+    <button class="btn btn-success ms-5" type="button" @onclick="CalcularTotal">Calcular total</button>
+</EditForm>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private string _mensaje = "";
+    private Venta? _venta = new();
+    private List<Libro>? _libros = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _libros = await _repositorioLibros.GetAll();
+
+        if (Id > 0)
+        {
+            _venta = await _repositorioVenta.Get(Id);
+            _mensaje = " : Modificar";
+        }
+        else
+        {
+            _mensaje = " : Nuevo";
+        }
+    }
+
+    private async Task Guardar()
+    {
+        if (Id > 0)
+        {
+            await _repositorioVenta.Update(Id, _venta!);
+        }
+        else
+        {
+            await _repositorioVenta.Add(_venta!);
+        }
+        Cancelar();
+    }
+
+    private void CalcularTotal()
+    {
+        if (_venta!.LibroId.HasValue && _venta.Cantidad > 0)
+        {
+            var libroSeleccionado = _libros!.FirstOrDefault(libro => libro.Id == _venta.LibroId);
+
+            if (libroSeleccionado != null)
+            {
+                _venta.Total = libroSeleccionado.Precio * _venta.Cantidad;
+            }
+            else
+            {
+                _venta.Total = null;
+            }
+        }
+        else
+        {
+            _venta.Total = null;
+        }
+    }
+
+    private void Cancelar()
+    {
+        _navigator.NavigateTo("/ventas");
+    }
+}

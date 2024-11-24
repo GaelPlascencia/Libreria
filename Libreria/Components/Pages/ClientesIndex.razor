@@ -1,0 +1,72 @@
+﻿@page "/clientes"
+@inject IRepositorioCliente _repositorio
+@inject NavigationManager _navigator
+<PageTitle>Clientes</PageTitle>
+
+<div class="row">
+    <div class="col">
+        <h3>Listado de Clientes</h3>
+    </div>
+    <div class="col">
+        <a href="clientes/nuevo" class="btn btn-primary">Agregar clientes</a>
+    </div>
+</div>
+
+@if (_clientes is null)
+{
+    <div class="spinner-border" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+}
+else if (_clientes.Count == 0)
+{
+    <h2>No se han registrado clientes</h2>
+}
+else
+{
+    <table class="table table-striped text-center">
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Correo</th>
+                <th>Teléfono</th>
+                <th>Dirección</th>
+                <th colspan="2">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (Cliente cliente in _clientes)
+            {
+                <tr>
+                    <td>@cliente.Nombre</td>
+                    <td>@cliente.Correo</td>
+                    <td>@cliente.Telefono</td>
+                    <td>@cliente.Direccion</td>
+                    <td>
+                        <i class="bi bi-pencil-fill" @onclick="()=>Modificar(cliente.Id)"></i>
+                        <i class="bi bi-trash-fill" @onclick="()=>Eliminar(cliente)"></i>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<Cliente>? _clientes = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _clientes = await _repositorio.GetAll();
+    }
+    private void Modificar(int id)
+    {
+        _navigator.NavigateTo($"/clientes/nuevo/{id}");
+    }
+    private async void Eliminar(Cliente cliente)
+    {
+        await _repositorio.Delete(cliente.Id);
+        _clientes!.Remove(cliente);
+        StateHasChanged();
+    }
+}
